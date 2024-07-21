@@ -12,6 +12,7 @@ public class GameLoop implements Runnable {
     private int TARGET_FPS;
     private int frames;
     private long lastFpsTime;
+    private boolean dynamicLighting;
 
     public GameLoop(World world) {
         this.world = world;
@@ -27,9 +28,11 @@ public class GameLoop implements Runnable {
         try {
             props.load(getClass().getClassLoader().getResourceAsStream(propertiesFile));
             TARGET_FPS = Integer.parseInt(props.getProperty("fps", "60"));
+            dynamicLighting = Boolean.parseBoolean(props.getProperty("dynamicLighting", "false"));
         } catch (IOException e) {
             e.printStackTrace();
             TARGET_FPS = 60;
+            dynamicLighting = false;
         }
     }
 
@@ -60,6 +63,9 @@ public class GameLoop implements Runnable {
 
             if (sleepTime > 0) {
                 try {
+                    /*
+                     * Slightly broken sleep logic, will be cleared later
+                     */
                     Thread.sleep(sleepTime / 1000000, (int) (sleepTime % 1000000));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -72,6 +78,9 @@ public class GameLoop implements Runnable {
 
     private void update() {
         world.update();
+        if (dynamicLighting) {
+            //world.applyDynamicLighting();
+        }
     }
 
     private void render() {

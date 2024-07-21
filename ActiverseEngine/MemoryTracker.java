@@ -70,7 +70,7 @@ public class MemoryTracker {
                 writer.println("New Log Session @ " + formattedDateTime);
                 newSessionNotified = true;
             }
-            writer.println(logNum + " | " + formattedDateTime + " | " + getMemoryUsagePerSecond() + " @ FPS: " + World.getFPS() + " target@ " + targetFPS);
+            writer.println(logNum + " | " + formattedDateTime + " | " + getMemoryUsagePerSecond() + " | FPS: " + World.getFPS() + " targeting " + targetFPS + " | Current Sys Time " + System.currentTimeMillis());
             logNum++;
         } catch (IOException e) {
             e.printStackTrace();

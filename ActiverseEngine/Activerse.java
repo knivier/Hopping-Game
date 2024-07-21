@@ -20,11 +20,8 @@ public class Activerse {
     public static void start(World world) {
         currentWorld = world;
 
-        // Initialize and start the game loop
         gameLoop = new GameLoop(currentWorld);
         new Thread(gameLoop).start();
-
-        // Set up the JFrame
         SwingUtilities.invokeLater(() -> {
             frame = new JFrame("Activerse Instance v1.1.2");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
