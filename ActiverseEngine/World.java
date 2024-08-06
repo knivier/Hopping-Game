@@ -6,12 +6,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
-
 /**
  * Represents the world where actors interact.
  * This class extends JPanel and implements ActionListener, KeyListener.
@@ -178,20 +178,73 @@ public class World extends JPanel implements ActionListener, KeyListener {
 
     private void applyDynamicLighting(Graphics g) {
         Graphics2D g2d = (Graphics2D) g.create();
-        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
 
-        // Apply lighting based on multiple light sources
+        // Temporary buffer to avoid multiple drawing operations on the main Graphics object
+        BufferedImage lightingBuffer = new BufferedImage(fixedWidth, fixedHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D gLighting = lightingBuffer.createGraphics();
+
+        // Clear the buffer
+        gLighting.setComposite(AlphaComposite.Clear);
+        gLighting.fillRect(0, 0, fixedWidth, fixedHeight);
+        gLighting.setComposite(AlphaComposite.SrcOver);
+
+        // Define multiple light sources
+        List<LightSource> lightSources = List.of(
+                new LightSource(fixedWidth / 2, fixedHeight / 2, Color.YELLOW, 300),
+                new LightSource(fixedWidth / 3, fixedHeight / 3, Color.CYAN, 200),
+                new LightSource(fixedWidth * 2 / 3, fixedHeight * 2 / 3, Color.MAGENTA, 250)
+        );
+
+        for (LightSource light : lightSources) {
+            RadialGradientPaint gradient = new RadialGradientPaint(
+                    light.x, light.y, light.radius,
+                    new float[] {0f, 1f},
+                    new Color[] {new Color(light.color.getRed(), light.color.getGreen(), light.color.getBlue(), 150), new Color(0, 0, 0, 0)}
+            );
+            gLighting.setPaint(gradient);
+            gLighting.fillRect(0, 0, fixedWidth, fixedHeight);
+        }
+
+        // Draw shadows
         for (Actor actor : actors) {
             int actorX = actor.getX();
             int actorY = actor.getY();
-            float distance = calculateDistance(actorX, actorY, fixedWidth / 2, fixedHeight / 2);
-            float brightness = Math.max(0, 1 - distance / 500);
-            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, brightness));
-            actor.paint(g2d);
+            int shadowLength = 50; // Example shadow length
+
+            for (LightSource light : lightSources) {
+                int dx = actorX - light.x;
+                int dy = actorY - light.y;
+                double distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < light.radius) {
+                    double angle = Math.atan2(dy, dx);
+                    int shadowX = (int) (actorX + shadowLength * Math.cos(angle));
+                    int shadowY = (int) (actorY + shadowLength * Math.sin(angle));
+                    gLighting.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
+                    gLighting.setColor(new Color(0, 0, 0, 100));
+                    gLighting.drawLine(actorX, actorY, shadowX, shadowY);
+                }
+            }
         }
 
+        // Draw the lighting buffer onto the main Graphics object
+        g2d.drawImage(lightingBuffer, 0, 0, null);
+
+        gLighting.dispose();
         g2d.dispose();
     }
+
+    private static class LightSource {
+        int x, y, radius;
+        Color color;
+
+        LightSource(int x, int y, Color color, int radius) {
+            this.x = x;
+            this.y = y;
+            this.color = color;
+            this.radius = radius;
+        }
+    }
+
 
     private float calculateDistance(int x1, int y1, int x2, int y2) {
         return (float) Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));

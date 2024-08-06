@@ -11,7 +11,6 @@ public class Activerse {
     private static World currentWorld;
     private static JFrame frame;
     private static GameLoop gameLoop;
-
     /**
      * Starts the Activerse application with the specified world.
      *
@@ -23,7 +22,7 @@ public class Activerse {
         gameLoop = new GameLoop(currentWorld);
         new Thread(gameLoop).start();
         SwingUtilities.invokeLater(() -> {
-            frame = new JFrame("Activerse Instance v1.1.2");
+            frame = new JFrame("Activerse Instance v1.2.0");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.getContentPane().add(currentWorld, BorderLayout.CENTER);
             frame.pack();
